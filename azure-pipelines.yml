@@ -1,1 +1,26 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: TerraformInstaller@0
+  inputs:
+    terraformVersion: '1.5.0'
+
+- script: |
+    terraform init
+    terraform plan -out=tfplan
+    terraform apply -auto-approve
+  displayName: 'Terraform Init, Plan & Apply'
+
+- script: |
+    pip install checkov
+    checkov -f main.tf -o json > checkov_results.json
+  displayName: 'Run Checkov Scan'
+
+- script: |
+    python exporter.py checkov_results.json
+  displayName: 'Export Checkov Results to Prometheus'
 
