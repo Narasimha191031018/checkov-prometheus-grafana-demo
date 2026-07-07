@@ -30,7 +30,6 @@ resource "azurerm_storage_container" "tfstate" {
 #   }
 # }
 
-
 resource "azurerm_container_group" "prometheus" {
   name                = "prometheus-demo"
   location            = azurerm_resource_group.demo.location
@@ -49,12 +48,11 @@ resource "azurerm_container_group" "prometheus" {
     }
   }
 
-  ip_address {
-    type = "Public"
-    ports {
-      port     = 9090
-      protocol = "TCP"
-    }
+  ip_address_type = "Public"
+
+  exposed_ports {
+    port     = 9090
+    protocol = "TCP"
   }
 }
 
@@ -76,12 +74,10 @@ resource "azurerm_container_group" "grafana" {
     }
   }
 
-  ip_address {
-    type = "Public"
-    ports {
-      port     = 3000
-      protocol = "TCP"
-    }
+  ip_address_type = "Public"
+
+  exposed_ports {
+    port     = 3000
+    protocol = "TCP"
   }
 }
-
