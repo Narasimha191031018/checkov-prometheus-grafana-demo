@@ -7,7 +7,7 @@ pool:
 steps:
 - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
   inputs:
-    terraformVersion: '1.5.0'
+    terraformVersion: '1.15.7'
 
 - task: AzureCLI@2
   inputs:
