@@ -1,1 +1,0 @@
-# checkov-prometheus-grafana-demo
