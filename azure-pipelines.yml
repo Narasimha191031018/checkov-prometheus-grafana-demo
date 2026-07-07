@@ -1,1 +1,30 @@
+trigger:
+- none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: TerraformInstaller@0
+  inputs:
+    terraformVersion: '1.5.0'
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'ado-terraform-sp'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      terraform init
+      terraform plan -out=tfplan
+      terraform apply -auto-approve
+
+- script: |
+    pip install checkov flask
+    checkov -f terraform/main.tf -o json > checkov_results.json
+  displayName: 'Run Checkov Scan'
+
+- script: |
+    python exporter/exporter.py checkov_results.json &
+  displayName: 'Start Exporter Service'
 
