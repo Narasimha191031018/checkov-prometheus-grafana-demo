@@ -15,6 +15,7 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
+      cd terraform
       terraform init
       terraform plan -out=tfplan
       terraform apply -auto-approve
