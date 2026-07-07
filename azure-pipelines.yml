@@ -16,9 +16,11 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       cd terraform
+      rm -rf .terraform terraform.tfstate*
       terraform init -reconfigure
       terraform plan -out=tfplan
       terraform apply -auto-approve
+
 
 - script: |
     pip install checkov flask
