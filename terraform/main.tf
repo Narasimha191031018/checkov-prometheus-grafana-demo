@@ -21,14 +21,15 @@ resource "azurerm_storage_container" "tfstate" {
   container_access_type = "private"
 }
 
-terraform {
-  backend "azurerm" {
-    resource_group_name  = "rg-checkov-demo"
-    storage_account_name = "checkovdemostorage"
-    container_name       = "tfstate"
-    key                  = "terraform.tfstate"
-  }
-}
+# terraform {
+#   backend "azurerm" {
+#     resource_group_name  = "rg-checkov-demo"
+#     storage_account_name = "checkovdemostorage"
+#     container_name       = "tfstate"
+#     key                  = "terraform.tfstate"
+#   }
+# }
+
 
 resource "azurerm_container_group" "prometheus" {
   name                = "prometheus-demo"
