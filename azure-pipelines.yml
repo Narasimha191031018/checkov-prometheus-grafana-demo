@@ -9,18 +9,7 @@ steps:
 - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
   inputs:
     terraformVersion: '1.15.7'
-
-# Step 1: Terraform Init (always reconfigure backend)
-- task: AzureCLI@2
-  displayName: 'Terraform Init'
-  inputs:
-    azureSubscription: 'ado-terraform-sp'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      cd terraform
-      terraform init -reconfigure
-
+#403 issue fix
 - task: AzureCLI@2
   displayName: 'Assign SP Role to Storage Account'
   inputs:
@@ -36,6 +25,17 @@ steps:
         --role "Storage Blob Data Contributor" \
         --scope $(az storage account show --name $STORAGE_NAME --resource-group $STORAGE_RG --query id -o tsv)
 
+# Step 1: Terraform Init (always reconfigure backend)
+- task: AzureCLI@2
+  displayName: 'Terraform Init'
+  inputs:
+    azureSubscription: 'ado-terraform-sp'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      cd terraform
+      terraform init -reconfigure
+
 
 # Step 3: Terraform Import Existing Resources (one-time step)
 # Run this once to sync state, then comment/remove it
@@ -47,7 +47,7 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       cd terraform
-      terraform import azurerm_resource_group.demo /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resourceGroups/rg-checkov-demo
+      terraform import azurerm_resource_group.demo /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resoueGroups/rg-checkov-demo
       terraform import azurerm_virtual_network.demo /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resourceGroups/rg-checkov-demo/providers/Microsoft.Network/virtualNetworks/vnet-checkov-demo
       terraform import azurerm_storage_account.demo /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resourceGroups/rg-checkov-demo/providers/Microsoft.Storage/storageAccounts/checkovdemostorage
 
