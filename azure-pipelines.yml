@@ -50,6 +50,14 @@ steps:
 - script: |
     docker run --rm -v $(pwd)/terraform:/tf bridgecrew/checkov -d /tf -o json > checkov_results.json
   displayName: 'Run Checkov Scan (Docker)'
+  
+# Step 5: Publish Checkov Results Artifact
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish Checkov Results'
+  inputs:
+    targetPath: checkov_results.json
+    artifact: checkov_results
+    publishLocation: 'pipeline'
 
 # Step 5: Setup Python Virtualenv + Start Exporter
 - script: |
