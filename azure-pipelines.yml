@@ -5,29 +5,54 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+# Step 0: Install Terraform
 - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
   inputs:
     terraformVersion: '1.15.7'
 
+# Step 1: Terraform Init (First run only: migrate state)
 - task: AzureCLI@2
+  displayName: 'Terraform Init (Migrate State - First Run Only)'
   inputs:
     azureSubscription: 'ado-terraform-sp'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
       cd terraform
+      # This moves local state into Azure backend
+      terraform init -migrate-state
+
+# Step 2: Terraform Init + Plan (Subsequent runs)
+- task: AzureCLI@2
+  displayName: 'Terraform Init & Plan'
+  inputs:
+    azureSubscription: 'ado-terraform-sp'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      cd terraform
+      # Clean local state (safe after migration)
       rm -rf .terraform terraform.tfstate*
+      # Connect to backend
       terraform init -reconfigure
+      # Generate plan file
       terraform plan -out=tfplan
-      terraform apply -auto-approve
 
+# Step 3: Publish Plan Artifact
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish Plan Artifact'
+  inputs:
+    targetPath: terraform/tfplan
+    artifact: tfplan
+    publishLocation: 'pipeline'
 
+# Step 4: Run Checkov Scan
 - script: |
     pip install checkov flask
-    checkov -f terraform/main.tf -o json > checkov_results.json
+    checkov -d terraform -o json > checkov_results.json
   displayName: 'Run Checkov Scan'
 
+# Step 5: Start Exporter Service
 - script: |
     python exporter/exporter.py checkov_results.json &
   displayName: 'Start Exporter Service'
-
