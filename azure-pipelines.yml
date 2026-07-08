@@ -46,21 +46,15 @@ steps:
     artifact: tfplan
     publishLocation: 'pipeline'
 
-# Step 4: Setup Python Virtualenv + Install Checkov
+# Step 4: Run Checkov via Docker
+- script: |
+    docker run --rm -v $(pwd)/terraform:/tf bridgecrew/checkov -d /tf -o json > checkov_results.json
+  displayName: 'Run Checkov Scan (Docker)'
+
+# Step 5: Setup Python Virtualenv + Start Exporter
 - script: |
     python3 -m venv venv
     source venv/bin/activate
-    pip install --upgrade pip setuptools wheel
-    # Install checkov + flask
-    pip install "checkov==3.2.66" flask
-    # Force packaging upgrade to satisfy wheel
-    pip install --upgrade "packaging>=24.0"
-    # Run checkov
-    checkov -d terraform -o json > checkov_results.json
-  displayName: 'Run Checkov Scan (Virtualenv)'
-
-# Step 5: Start Exporter Service
-- script: |
-    source venv/bin/activate
+    pip install --upgrade pip setuptools wheel flask
     python exporter/exporter.py checkov_results.json &
-  displayName: 'Start Exporter Service'
+  displayName: 'Start Exporter Service (Python)'
