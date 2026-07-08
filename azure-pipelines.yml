@@ -34,13 +34,14 @@ steps:
       terraform init -reconfigure
       terraform plan -out=tfplan
 
-# Step 3: Publish Plan Artifact
+# Step 3: Publish Terraform Folder Artifact
 - task: PublishPipelineArtifact@1
-  displayName: 'Publish Plan Artifact'
+  displayName: 'Publish Terraform Folder'
   inputs:
-    targetPath: terraform/tfplan
-    artifact: tfplan
+    targetPath: terraform
+    artifact: terraform
     publishLocation: 'pipeline'
+
 
 # Step 4: Run Checkov (non-blocking, capture results)
 - script: |
