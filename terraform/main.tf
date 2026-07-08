@@ -3,16 +3,43 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "demo" {
-  name     = "rg-checkov-demo"
-  location = "East US"
+  name     = var.resource_group_name
+  location = var.location
+}
+
+resource "azurerm_virtual_network" "demo" {
+  name                = var.vnet_name
+  address_space       = [var.vnet_address_space]
+  location            = azurerm_resource_group.demo.location
+  resource_group_name = azurerm_resource_group.demo.name
+}
+
+resource "azurerm_subnet" "demo" {
+  name                 = var.subnet_name
+  resource_group_name  = azurerm_resource_group.demo.name
+  virtual_network_name = azurerm_virtual_network.demo.name
+  address_prefixes     = [var.subnet_prefix]
 }
 
 resource "azurerm_storage_account" "demo" {
-  name                     = "checkovdemostorage"
+  name                     = var.storage_account_name
   resource_group_name      = azurerm_resource_group.demo.name
   location                 = azurerm_resource_group.demo.location
   account_tier             = "Standard"
-  account_replication_type = "LRS"
+  account_replication_type = "GRS"
+  min_tls_version          = "TLS1_2"
+  allow_blob_public_access = false
+  public_network_access_enabled = false
+
+  queue_properties {
+    logging {
+      delete                = true
+      read                  = true
+      write                 = true
+      version               = "1.0"
+      retention_policy_days = 7
+    }
+  }
 }
 
 resource "azurerm_storage_container" "tfstate" {
@@ -20,15 +47,6 @@ resource "azurerm_storage_container" "tfstate" {
   storage_account_name  = azurerm_storage_account.demo.name
   container_access_type = "private"
 }
-
-# terraform {
-#   backend "azurerm" {
-#     resource_group_name  = "rg-checkov-demo"
-#     storage_account_name = "checkovdemostorage"
-#     container_name       = "tfstate"
-#     key                  = "terraform.tfstate"
-#   }
-# }
 
 resource "azurerm_container_group" "prometheus" {
   name                = "prometheus-demo"
@@ -48,12 +66,7 @@ resource "azurerm_container_group" "prometheus" {
     }
   }
 
-  ip_address_type = "Public"
-
-  exposed_port {
-    port     = 9090
-    protocol = "TCP"
-  }
+  subnet_ids = [azurerm_subnet.demo.id]
 }
 
 resource "azurerm_container_group" "grafana" {
@@ -74,10 +87,5 @@ resource "azurerm_container_group" "grafana" {
     }
   }
 
-  ip_address_type = "Public"
-
-  exposed_port {
-    port     = 3000
-    protocol = "TCP"
-  }
+  subnet_ids = [azurerm_subnet.demo.id]
 }
