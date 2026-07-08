@@ -35,6 +35,14 @@ resource "azurerm_subnet" "demo" {
   resource_group_name  = azurerm_resource_group.demo.name
   virtual_network_name = azurerm_virtual_network.demo.name
   address_prefixes     = ["10.0.1.0/24"]
+
+  delegation {
+    name = "aci-delegation"
+    service_delegation {
+      name    = "Microsoft.ContainerInstance/containerGroups"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+    }
+  }
 }
 
 resource "azurerm_storage_account" "demo" {
@@ -48,11 +56,7 @@ resource "azurerm_storage_account" "demo" {
   public_network_access_enabled   = false
 }
 
-resource "azurerm_storage_container" "tfstate" {
-  name                  = "tfstate"
-  storage_account_name  = azurerm_storage_account.demo.name
-  container_access_type = "private"
-}
+# Removed azurerm_storage_container.tfstate (backend manages this)
 
 resource "azurerm_container_group" "prometheus" {
   name                = "prometheus-demo"
