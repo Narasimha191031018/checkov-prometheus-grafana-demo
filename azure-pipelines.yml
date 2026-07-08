@@ -21,7 +21,25 @@ steps:
       cd terraform
       terraform init -reconfigure
 
-# Step 2: Terraform Import Existing Resources (one-time step)
+# Step 2: Assign SP Role to Storage Account (fix 403 error)
+- task: AzureCLI@2
+  displayName: 'Assign SP Role to Storage Account'
+  inputs:
+    azureSubscription: 'ado-terraform-sp'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      STORAGE_RG="rg-checkov-demo"
+      STORAGE_NAME="checkovdemostorage"
+      # Get the service principal objectId for the pipeline identity
+      SP_ID=$(az account show --query user.assignedIdentityInfo.principalId -o tsv || az account show --query user.name -o tsv)
+      # Assign Storage Blob Data Contributor role
+      az role assignment create \
+        --assignee $SP_ID \
+        --role "Storage Blob Data Contributor" \
+        --scope $(az storage account show --name $STORAGE_NAME --resource-group $STORAGE_RG --query id -o tsv)
+
+# Step 3: Terraform Import Existing Resources (one-time step)
 # Run this once to sync state, then comment/remove it
 - task: AzureCLI@2
   displayName: 'Terraform Import Existing Resources'
@@ -35,7 +53,7 @@ steps:
       terraform import azurerm_virtual_network.demo /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resourceGroups/rg-checkov-demo/providers/Microsoft.Network/virtualNetworks/vnet-checkov-demo
       terraform import azurerm_storage_account.demo /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resourceGroups/rg-checkov-demo/providers/Microsoft.Storage/storageAccounts/checkovdemostorage
 
-# Step 3: Terraform Plan
+# Step 4: Terraform Plan
 - task: AzureCLI@2
   displayName: 'Terraform Plan'
   inputs:
@@ -48,7 +66,7 @@ steps:
       terraform init -reconfigure
       terraform plan -out=tfplan
 
-# Step 4: Publish Terraform Config + Plan (exclude .terraform/)
+# Step 5: Publish Terraform Config + Plan (exclude .terraform/)
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Terraform Config + Plan'
   inputs:
@@ -56,13 +74,13 @@ steps:
     artifact: terraform
     publishLocation: 'pipeline'
 
-# Step 5: Run Checkov (non-blocking, capture results)
+# Step 6: Run Checkov (non-blocking, capture results)
 - script: |
     docker run --rm -v $(pwd)/terraform:/tf \
       bridgecrew/checkov -d /tf -o json > checkov_results.json || true
   displayName: 'Run Checkov Scan (Docker - Capture Results)'
 
-# Step 6: Publish Checkov Results Artifact
+# Step 7: Publish Checkov Results Artifact
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Checkov Results'
   inputs:
@@ -70,7 +88,7 @@ steps:
     artifact: checkov_results
     publishLocation: 'pipeline'
 
-# Step 7: Setup Python Virtualenv + Start Exporter
+# Step 8: Setup Python Virtualenv + Start Exporter
 - script: |
     python3 -m venv venv
     source venv/bin/activate
