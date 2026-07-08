@@ -46,13 +46,17 @@ steps:
     artifact: tfplan
     publishLocation: 'pipeline'
 
-# Step 4: Run Checkov Scan
+# Step 4: Setup Python Virtualenv + Install Checkov
 - script: |
-    pip install checkov flask
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install --upgrade pip setuptools wheel
+    pip install "checkov==3.2.66" flask
     checkov -d terraform -o json > checkov_results.json
-  displayName: 'Run Checkov Scan'
+  displayName: 'Run Checkov Scan (Virtualenv)'
 
 # Step 5: Start Exporter Service
 - script: |
+    source venv/bin/activate
     python exporter/exporter.py checkov_results.json &
   displayName: 'Start Exporter Service'
