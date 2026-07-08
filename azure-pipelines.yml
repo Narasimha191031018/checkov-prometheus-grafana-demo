@@ -21,6 +21,8 @@ steps:
       cd terraform
       terraform init -reconfigure
 
+# Step 2: Terraform Import Existing Resources (one-time step)
+# Run this once to sync state, then comment/remove it
 - task: AzureCLI@2
   displayName: 'Terraform Import Existing Resources'
   inputs:
@@ -29,9 +31,9 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       cd terraform
+      terraform import azurerm_resource_group.demo /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resourceGroups/rg-checkov-demo
+      terraform import azurerm_virtual_network.demo /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resourceGroups/rg-checkov-demo/providers/Microsoft.Network/virtualNetworks/vnet-checkov-demo
       terraform import azurerm_storage_account.demo /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resourceGroups/rg-checkov-demo/providers/Microsoft.Storage/storageAccounts/checkovdemostorage
-      terraform import azurerm_container_group.prometheus /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resourceGroups/rg-checkov-demo/providers/Microsoft.ContainerInstance/containerGroups/prometheus-demo
-      terraform import azurerm_container_group.grafana /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resourceGroups/rg-checkov-demo/providers/Microsoft.ContainerInstance/containerGroups/grafana-demo
 
 # Step 3: Terraform Plan
 - task: AzureCLI@2
