@@ -1,14 +1,7 @@
 terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.100"
-    }
-  }
-
   backend "azurerm" {
-    resource_group_name  = "rg-checkov-demo"
-    storage_account_name = "checkovdemostorage"
+    resource_group_name  = "rg-tfstate-backend"       # backend RG (manual)
+    storage_account_name = "tfstatecheckovstorage"    # manually created storage account
     container_name       = "tfstate"
     key                  = "terraform.tfstate"
   }
@@ -18,57 +11,26 @@ provider "azurerm" {
   features {}
 }
 
-resource "azurerm_resource_group" "demo" {
-  name     = "rg-checkov-demo"
-  location = "East US"
+data "azurerm_resource_group" "monitoring" {
+  name = var.monitoring_rg
 }
 
-resource "azurerm_virtual_network" "demo" {
-  name                = "vnet-checkov-demo"
-  address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.demo.location
-  resource_group_name = azurerm_resource_group.demo.name
+resource "random_integer" "suffix" {
+  min = 10000
+  max = 99999
 }
-
-resource "azurerm_subnet" "demo" {
-  name                 = "subnet-checkov-demo"
-  resource_group_name  = azurerm_resource_group.demo.name
-  virtual_network_name = azurerm_virtual_network.demo.name
-  address_prefixes     = ["10.0.1.0/24"]
-
-  delegation {
-    name = "aci-delegation"
-    service_delegation {
-      name    = "Microsoft.ContainerInstance/containerGroups"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
-    }
-  }
-}
-
-resource "azurerm_storage_account" "demo" {
-  name                     = "checkovdemostorage"
-  resource_group_name      = azurerm_resource_group.demo.name
-  location                 = azurerm_resource_group.demo.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  min_tls_version          = "TLS1_2"
-  allow_nested_items_to_be_public = false
-  public_network_access_enabled   = false
-}
-
-# Removed azurerm_storage_container.tfstate (backend manages this)
 
 resource "azurerm_container_group" "prometheus" {
   name                = "prometheus-demo"
-  location            = azurerm_resource_group.demo.location
-  resource_group_name = azurerm_resource_group.demo.name
+  location            = data.azurerm_resource_group.monitoring.location
+  resource_group_name = data.azurerm_resource_group.monitoring.name
   os_type             = "Linux"
 
   container {
     name   = "prometheus"
     image  = "prom/prometheus"
-    cpu    = 1
-    memory = 1.5
+    cpu    = var.prometheus_cpu
+    memory = var.prometheus_memory
 
     ports {
       port     = 9090
@@ -76,21 +38,24 @@ resource "azurerm_container_group" "prometheus" {
     }
   }
 
-  ip_address_type = "Private"
-  subnet_ids      = [azurerm_subnet.demo.id]
+  ip_address {
+    type     = "Public"
+    ports    = [9090]
+    dns_name_label = "prometheus-demo-${random_integer.suffix.result}"
+  }
 }
 
 resource "azurerm_container_group" "grafana" {
   name                = "grafana-demo"
-  location            = azurerm_resource_group.demo.location
-  resource_group_name = azurerm_resource_group.demo.name
+  location            = data.azurerm_resource_group.monitoring.location
+  resource_group_name = data.azurerm_resource_group.monitoring.name
   os_type             = "Linux"
 
   container {
     name   = "grafana"
     image  = "grafana/grafana"
-    cpu    = 1
-    memory = 1.5
+    cpu    = var.grafana_cpu
+    memory = var.grafana_memory
 
     ports {
       port     = 3000
@@ -98,6 +63,9 @@ resource "azurerm_container_group" "grafana" {
     }
   }
 
-  ip_address_type = "Private"
-  subnet_ids      = [azurerm_subnet.demo.id]
+  ip_address {
+    type     = "Public"
+    ports    = [3000]
+    dns_name_label = "grafana-demo-${random_integer.suffix.result}"
+  }
 }
