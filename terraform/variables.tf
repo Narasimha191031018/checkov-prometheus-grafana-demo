@@ -4,6 +4,12 @@ variable "monitoring_rg" {
   default     = "rg-checkov-demo"
 }
 
+variable "monitoring_location" {
+  description = "Location for monitoring RG"
+  type        = string
+  default     = "East US"
+}
+
 variable "prometheus_cpu" {
   description = "CPU for Prometheus container"
   type        = string
