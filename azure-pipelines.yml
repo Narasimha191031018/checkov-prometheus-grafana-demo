@@ -9,21 +9,6 @@ steps:
 - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
   inputs:
     terraformVersion: '1.15.7'
-#403 issue fix
-- task: AzureCLI@2
-  displayName: 'Assign SP Role to Storage Account'
-  inputs:
-    azureSubscription: 'ado-terraform-sp'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      STORAGE_RG="rg-checkov-demo"
-      STORAGE_NAME="checkovdemostorage"
-      SP_ID=$(az ad sp list --display-name "ado-terraform-sp" --query "[0].id" -o tsv)
-      az role assignment create \
-        --assignee $SP_ID \
-        --role "Storage Blob Data Contributor" \
-        --scope $(az storage account show --name $STORAGE_NAME --resource-group $STORAGE_RG --query id -o tsv)
 
 # Step 1: Terraform Init (always reconfigure backend)
 - task: AzureCLI@2
