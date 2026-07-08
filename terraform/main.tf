@@ -38,10 +38,11 @@ resource "azurerm_container_group" "prometheus" {
     }
   }
 
-  ip_address {
-    type     = "Public"
-    ports    = [9090]
-    dns_name_label = "prometheus-demo-${random_integer.suffix.result}"
+  ip_address_type = "Public"
+  dns_name_label  = "prometheus-demo-${random_integer.suffix.result}"
+  exposed_ports {
+    port     = 9090
+    protocol = "TCP"
   }
 }
 
@@ -63,9 +64,10 @@ resource "azurerm_container_group" "grafana" {
     }
   }
 
-  ip_address {
-    type     = "Public"
-    ports    = [3000]
-    dns_name_label = "grafana-demo-${random_integer.suffix.result}"
+  ip_address_type = "Public"
+  dns_name_label  = "grafana-demo-${random_integer.suffix.result}"
+  exposed_ports {
+    port     = 3000
+    protocol = "TCP"
   }
 }
