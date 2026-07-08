@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.100"   # latest stable provider
+    }
+  }
+}
+
 provider "azurerm" {
   features {}
 }
@@ -28,8 +37,8 @@ resource "azurerm_storage_account" "demo" {
   account_tier             = "Standard"
   account_replication_type = "GRS"
   min_tls_version          = "TLS1_2"
-  allow_blob_public_access = false
-  public_network_access_enabled = false
+  allow_nested_items_to_be_public = false   # correct property for v3.x
+  public_network_access_enabled   = false
 
   queue_properties {
     logging {
