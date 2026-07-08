@@ -5,51 +5,21 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-# Step 0: Install Terraform
 - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
   inputs:
     terraformVersion: '1.15.7'
 
-# Step 1: Terraform Init (always reconfigure backend)
 - task: AzureCLI@2
-  displayName: 'Terraform Init'
+  displayName: 'Terraform Init + Plan'
   inputs:
     azureSubscription: 'ado-terraform-sp'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
       cd terraform
-      terraform init -reconfigure
-
-
-# Step 3: Terraform Import Existing Resources (one-time step)
-# Run this once to sync state, then comment/remove it
-- task: AzureCLI@2
-  displayName: 'Terraform Import Existing Resources'
-  inputs:
-    azureSubscription: 'ado-terraform-sp'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      cd terraform
-      terraform import azurerm_resource_group.demo /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resoueGroups/rg-checkov-demo
-      terraform import azurerm_virtual_network.demo /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resourceGroups/rg-checkov-demo/providers/Microsoft.Network/virtualNetworks/vnet-checkov-demo
-      terraform import azurerm_storage_account.demo /subscriptions/6cd70fb3-2991-4056-afe9-60659e59898a/resourceGroups/rg-checkov-demo/providers/Microsoft.Storage/storageAccounts/checkovdemostorage
-
-# Step 4: Terraform Plan
-- task: AzureCLI@2
-  displayName: 'Terraform Plan'
-  inputs:
-    azureSubscription: 'ado-terraform-sp'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      cd terraform
-      rm -rf .terraform terraform.tfstate*
       terraform init -reconfigure
       terraform plan -out=tfplan
 
-# Step 5: Publish Terraform Config + Plan (exclude .terraform/)
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Terraform Config + Plan'
   inputs:
@@ -57,24 +27,14 @@ steps:
     artifact: terraform
     publishLocation: 'pipeline'
 
-# Step 6: Run Checkov (non-blocking, capture results)
 - script: |
     docker run --rm -v $(pwd)/terraform:/tf \
       bridgecrew/checkov -d /tf -o json > checkov_results.json || true
-  displayName: 'Run Checkov Scan (Docker - Capture Results)'
+  displayName: 'Run Checkov Scan (non-blocking)'
 
-# Step 7: Publish Checkov Results Artifact
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Checkov Results'
   inputs:
     targetPath: checkov_results.json
     artifact: checkov_results
     publishLocation: 'pipeline'
-
-# Step 8: Setup Python Virtualenv + Start Exporter
-- script: |
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install --upgrade pip setuptools wheel flask
-    python exporter/exporter.py checkov_results.json &
-  displayName: 'Start Exporter Service (Python)'
