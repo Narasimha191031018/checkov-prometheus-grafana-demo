@@ -5,6 +5,13 @@ terraform {
       version = "~> 3.100"
     }
   }
+
+  backend "azurerm" {
+    resource_group_name  = "rg-checkov-demo"
+    storage_account_name = "checkovdemostorage"
+    container_name       = "tfstate"
+    key                  = "terraform.tfstate"
+  }
 }
 
 provider "azurerm" {
