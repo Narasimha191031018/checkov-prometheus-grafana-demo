@@ -30,7 +30,7 @@ resource "azurerm_container_group" "prometheus" {
 
   container {
     name   = "prometheus"
-    image = "mcr.microsoft.com/oss/prometheus/prometheus:latest"
+    image = "prom/prometheus:latest"
     cpu    = var.prometheus_cpu
     memory = var.prometheus_memory
 
@@ -57,7 +57,7 @@ resource "azurerm_container_group" "grafana" {
 
   container {
     name   = "grafana"
-    image = "mcr.microsoft.com/oss/grafana/grafana:latest"
+    image = "grafana/grafana:latest"
     cpu    = var.grafana_cpu
     memory = var.grafana_memory
 
