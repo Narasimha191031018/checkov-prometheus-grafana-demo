@@ -11,8 +11,10 @@ provider "azurerm" {
   features {}
 }
 
-data "azurerm_resource_group" "monitoring" {
-  name = var.monitoring_rg
+# Create monitoring RG instead of data lookup
+resource "azurerm_resource_group" "monitoring" {
+  name     = var.monitoring_rg
+  location = var.monitoring_location
 }
 
 resource "random_integer" "suffix" {
@@ -22,8 +24,8 @@ resource "random_integer" "suffix" {
 
 resource "azurerm_container_group" "prometheus" {
   name                = "prometheus-demo"
-  location            = data.azurerm_resource_group.monitoring.location
-  resource_group_name = data.azurerm_resource_group.monitoring.name
+  location            = azurerm_resource_group.monitoring.location
+  resource_group_name = azurerm_resource_group.monitoring.name
   os_type             = "Linux"
 
   container {
@@ -40,6 +42,7 @@ resource "azurerm_container_group" "prometheus" {
 
   ip_address_type = "Public"
   dns_name_label  = "prometheus-demo-${random_integer.suffix.result}"
+
   exposed_port {
     port     = 9090
     protocol = "TCP"
@@ -48,8 +51,8 @@ resource "azurerm_container_group" "prometheus" {
 
 resource "azurerm_container_group" "grafana" {
   name                = "grafana-demo"
-  location            = data.azurerm_resource_group.monitoring.location
-  resource_group_name = data.azurerm_resource_group.monitoring.name
+  location            = azurerm_resource_group.monitoring.location
+  resource_group_name = azurerm_resource_group.monitoring.name
   os_type             = "Linux"
 
   container {
@@ -66,6 +69,7 @@ resource "azurerm_container_group" "grafana" {
 
   ip_address_type = "Public"
   dns_name_label  = "grafana-demo-${random_integer.suffix.result}"
+
   exposed_port {
     port     = 3000
     protocol = "TCP"
