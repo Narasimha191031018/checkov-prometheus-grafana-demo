@@ -8,13 +8,12 @@ output "storage_account_name" {
   value       = azurerm_storage_account.demo.name
 }
 
-output "prometheus_url" {
-  description = "Public IP/URL for Prometheus"
-  value       = azurerm_container_group.prometheus.ip_address[0].ip
+output "prometheus_ip" {
+  description = "Public IP for Prometheus"
+  value       = azurerm_container_group.prometheus.ip_address
 }
 
-output "grafana_url" {
-  description = "Public IP/URL for Grafana"
-  value       = azurerm_container_group.grafana.ip_address[0].ip
+output "grafana_ip" {
+  description = "Public IP for Grafana"
+  value       = azurerm_container_group.grafana.ip_address
 }
-
