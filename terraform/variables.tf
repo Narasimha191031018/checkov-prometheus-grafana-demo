@@ -1,41 +1,29 @@
-variable "resource_group_name" {
-  description = "Name of the resource group"
+variable "monitoring_rg" {
+  description = "Resource group for monitoring stack"
   type        = string
   default     = "rg-checkov-demo"
 }
 
-variable "location" {
-  description = "Azure region"
+variable "prometheus_cpu" {
+  description = "CPU for Prometheus container"
   type        = string
-  default     = "East US"
+  default     = "1"
 }
 
-variable "vnet_name" {
-  description = "Virtual network name"
+variable "prometheus_memory" {
+  description = "Memory for Prometheus container"
   type        = string
-  default     = "vnet-checkov-demo"
+  default     = "1.5"
 }
 
-variable "vnet_address_space" {
-  description = "Address space for the VNet"
+variable "grafana_cpu" {
+  description = "CPU for Grafana container"
   type        = string
-  default     = "10.0.0.0/16"
+  default     = "1"
 }
 
-variable "subnet_name" {
-  description = "Subnet name"
+variable "grafana_memory" {
+  description = "Memory for Grafana container"
   type        = string
-  default     = "subnet-checkov-demo"
-}
-
-variable "subnet_prefix" {
-  description = "Subnet address prefix"
-  type        = string
-  default     = "10.0.1.0/24"
-}
-
-variable "storage_account_name" {
-  description = "Storage account name"
-  type        = string
-  default     = "checkovdemostorage"
+  default     = "1.5"
 }
