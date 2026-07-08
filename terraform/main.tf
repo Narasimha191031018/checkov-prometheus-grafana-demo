@@ -40,7 +40,7 @@ resource "azurerm_container_group" "prometheus" {
 
   ip_address_type = "Public"
   dns_name_label  = "prometheus-demo-${random_integer.suffix.result}"
-  exposed_ports {
+  exposed_port {
     port     = 9090
     protocol = "TCP"
   }
@@ -66,7 +66,7 @@ resource "azurerm_container_group" "grafana" {
 
   ip_address_type = "Public"
   dns_name_label  = "grafana-demo-${random_integer.suffix.result}"
-  exposed_ports {
+  exposed_port {
     port     = 3000
     protocol = "TCP"
   }
