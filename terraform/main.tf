@@ -44,7 +44,7 @@ resource "azurerm_storage_account" "demo" {
   blob_properties {
     delete_retention_policy {
       days    = 7
-      enabled = true   # enable soft delete
+      #enabled = true   # enable soft delete
     }
   }
 
