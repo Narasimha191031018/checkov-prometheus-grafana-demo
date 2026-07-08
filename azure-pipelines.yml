@@ -51,10 +51,10 @@ steps:
     python3 -m venv venv
     source venv/bin/activate
     pip install --upgrade pip setuptools wheel
-    # Install checkov but ignore packaging constraint
-    pip install "checkov==3.2.66" flask --no-deps
-    # Manually install packaging at a version that satisfies wheel
-    pip install "packaging>=24.0"
+    # Install checkov + flask
+    pip install "checkov==3.2.66" flask
+    # Force packaging upgrade to satisfy wheel
+    pip install --upgrade "packaging>=24.0"
     # Run checkov
     checkov -d terraform -o json > checkov_results.json
   displayName: 'Run Checkov Scan (Virtualenv)'
