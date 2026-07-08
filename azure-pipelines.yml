@@ -21,7 +21,6 @@ steps:
       cd terraform
       terraform init -reconfigure
 
-# Step 2: Assign SP Role to Storage Account (fix 403 error)
 - task: AzureCLI@2
   displayName: 'Assign SP Role to Storage Account'
   inputs:
@@ -31,13 +30,12 @@ steps:
     inlineScript: |
       STORAGE_RG="rg-checkov-demo"
       STORAGE_NAME="checkovdemostorage"
-      # Get the service principal objectId for the pipeline identity
-      SP_ID=$(az account show --query user.assignedIdentityInfo.principalId -o tsv || az account show --query user.name -o tsv)
-      # Assign Storage Blob Data Contributor role
+      SP_ID=$(az ad sp list --display-name "ado-terraform-sp" --query "[0].id" -o tsv)
       az role assignment create \
         --assignee $SP_ID \
         --role "Storage Blob Data Contributor" \
         --scope $(az storage account show --name $STORAGE_NAME --resource-group $STORAGE_RG --query id -o tsv)
+
 
 # Step 3: Terraform Import Existing Resources (one-time step)
 # Run this once to sync state, then comment/remove it
