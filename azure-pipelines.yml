@@ -34,9 +34,9 @@ steps:
       terraform init -reconfigure
       terraform plan -out=tfplan
 
-# Step 3: Publish Terraform Folder Artifact
+# Step 3: Publish Terraform Config + Plan (exclude .terraform/)
 - task: PublishPipelineArtifact@1
-  displayName: 'Publish Terraform Folder'
+  displayName: 'Publish Terraform Config + Plan'
   inputs:
     targetPath: terraform
     artifact: terraform
